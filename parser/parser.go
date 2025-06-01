@@ -2,10 +2,8 @@ package parser
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -77,11 +75,7 @@ func (p *parser) CommandType() CommandType {
 // Should be called only when commandType() is A_COMMAND or L_COMMAND.
 func (p *parser) Symbol() string {
 	if p.CommandType() == A_COMMAND {
-		i, err := strconv.Atoi(p.currentCommand[1:])
-		if err != nil {
-			panic(err)
-		}
-		return fmt.Sprintf("%015b", i)
+		return p.currentCommand[1:]
 	}
 	return p.currentCommand[1 : len(p.currentCommand)-1]
 }

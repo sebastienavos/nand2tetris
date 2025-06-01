@@ -26,7 +26,7 @@ type parser struct {
 func NewParserFromFilename(fileName string) *parser {
 	file, err := os.Open(fileName)
 	if err != nil {
-		return &parser{}
+		panic("could not open file")
 	}
 
 	return NewParser(file)
@@ -41,6 +41,7 @@ func NewParser(reader io.Reader) *parser {
 	return &parser
 }
 
+// Are there more commands in the input?
 func (p *parser) HasMoreCommands() bool {
 	return p.hasMore
 }
@@ -55,11 +56,9 @@ func (p *parser) Advance() {
 
 // Returns the type of the current command:
 //
-// - A_COMMAND for @Xxx where Xxx is either a symbol or a decimal number.
-//
-// - C_COMMAND for dest=comp;jump
-//
-// - L_COMMAND (actually, pseudo-command) for (Xxx) where Xxx is a symbol.
+//   - A_COMMAND for @Xxx where Xxx is either a symbol or a decimal number.
+//   - C_COMMAND for dest=comp;jump
+//   - L_COMMAND (actually, pseudo-command) for (Xxx) where Xxx is a symbol.
 func (p *parser) CommandType() CommandType {
 	x := p.currentCommand[0]
 	switch x {
@@ -123,7 +122,7 @@ func (p *parser) tryFindNextCommand() {
 	for p.hasMore = p.scanner.Scan(); p.hasMore; p.hasMore = p.scanner.Scan() {
 		stripped := removeWhitespace(stripComment(p.scanner.Text()))
 
-		if stripped != "\n" {
+		if stripped != "" {
 			p.nextCommand = stripped
 			return
 		}

@@ -83,7 +83,7 @@ func (p *parser) Symbol() string {
 		}
 		return fmt.Sprintf("%015b", i)
 	}
-	return p.currentCommand[1:][:len(p.currentCommand)-1]
+	return p.currentCommand[1 : len(p.currentCommand)-1]
 }
 
 // Returns the dest mnemonic in the current C-command (8 possibilities).

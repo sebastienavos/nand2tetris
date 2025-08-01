@@ -2,16 +2,16 @@ package codewriter
 
 import "io"
 
-type codeWriter struct {
+type CodeWriter struct {
 	w io.WriteCloser
 }
 
-func NewCodeWriter(w io.WriteCloser) codeWriter {
-	return codeWriter{w}
+func NewCodeWriter(w io.WriteCloser) CodeWriter {
+	return CodeWriter{w}
 }
 
-func (c codeWriter) SetFilename(filename string)                 {}
-func (c codeWriter) WriteArithmetic(cmd string)                  {}
-func (c codeWriter) WritePushPop(cmd, segment string, index int) {}
+func (c CodeWriter) SetFilename(filename string)                 {}
+func (c CodeWriter) WriteArithmetic(cmd string)                  {}
+func (c CodeWriter) WritePushPop(cmd, segment string, index int) {}
 
-func (c codeWriter) Close() { c.w.Close() }
+func (c CodeWriter) Close() { c.w.Close() }

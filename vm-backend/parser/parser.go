@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -105,8 +106,12 @@ func (p *parser) Arg1() string {
 
 // Returns the second argument of the current command.
 // Should be called only if the current command is C_PUSH, C_POP, C_FUNCTION, C_CALL.
-func (p *parser) Arg2() string {
-	return strings.Split(p.currentCommand, " ")[2]
+func (p *parser) Arg2() int {
+	i, err := strconv.Atoi(strings.Split(p.currentCommand, " ")[2])
+	if err != nil {
+		panic("oh bugger")
+	}
+	return i
 }
 
 // tryFindNextCommand iteratively reads lines until it finds one which contains a command, or until no lines remain.

@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"vm/codewriter"
+	"vm/parser"
 )
 
 func main() {
@@ -17,13 +19,26 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, f := range vmFiles {
-		translate(f, out)
-	}
-}
+	cw := codewriter.NewCodeWriter(out)
 
-func translate(f string, out *os.File) {
-	panic("unimplemented")
+	for _, f := range vmFiles {
+		cw.SetFilename(f)
+		p := parser.NewParserFromFilename(f)
+
+		for p.HasMoreCommands() {
+			p.Advance()
+			switch p.CommandType() {
+			case parser.C_ARITHMETIC:
+				cw.WriteArithmetic(p.Arg1())
+			case parser.C_POP:
+				cw.WritePushPop("pop", p.Arg1(), p.Arg2())
+			case parser.C_PUSH:
+				cw.WritePushPop("pop", p.Arg1(), p.Arg2())
+			default:
+				panic("crikey")
+			}
+		}
+	}
 }
 
 func statFiles(in string) []string {

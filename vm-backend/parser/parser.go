@@ -86,13 +86,19 @@ func (p *parser) CommandType() CommandType {
 //
 // Should not be called if the current command is C_RETURN.
 func (p *parser) Arg1() string {
-	panic("unimplemented")
+	splits := strings.Split(p.currentCommand, " ")
+	switch p.CommandType() {
+	case C_ARITHMETIC:
+		return splits[0]
+	default:
+		return splits[1]
+	}
 }
 
 // Returns the second argument of the current command.
 // Should be called only if the current command is C_PUSH, C_POP, C_FUNCTION, C_CALL.
 func (p *parser) Arg2() string {
-	panic("unimplemented")
+	return strings.Split(p.currentCommand, " ")[2]
 }
 
 // tryFindNextCommand iteratively reads lines until it finds one which contains a command, or until no lines remain.

@@ -73,9 +73,17 @@ func (p *parser) Advance() {
 }
 
 func (p *parser) CommandType() CommandType {
-	x := strings.Split(p.currentCommand, " ")[0]
-	if _, ok := arithmeticCmds[x]; ok {
+	x := strings.Split(p.currentCommand, " ")
+	if _, ok := arithmeticCmds[x[0]]; ok {
 		return C_ARITHMETIC
+	}
+
+	if x[0] == "push" {
+		return C_PUSH
+	}
+
+	if x[0] == "pop" {
+		return C_POP
 	}
 
 	panic("")

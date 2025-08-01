@@ -64,7 +64,7 @@ func main() {
 			}
 
 		case parser.C_COMMAND:
-			outf.WriteString(fmt.Sprintf("111%07b%03b%03b\n", code.Comp(p.Comp()), code.Dest(p.Dest()), code.Jump(p.Jump())))
+			fmt.Fprintf(outf, "111%07b%03b%03b\n", code.Comp(p.Comp()), code.Dest(p.Dest()), code.Jump(p.Jump()))
 		}
 	}
 }

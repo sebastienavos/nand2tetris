@@ -141,7 +141,6 @@ func (c *CodeWriter) writePush(segment string, index int) {
 	case "constant":
 		c.writeLines(fmt.Sprintf("@%v", index), "D=A")
 	case "local":
-		// Set D to the value of the memory at location M(LCL)+index
 		c.loadToD("@LCL", index)
 	case "argument":
 		c.loadToD("@ARG", index)
@@ -201,7 +200,7 @@ func (c *CodeWriter) writeLines(lines ...string) {
 }
 
 func (c *CodeWriter) uniqueLabel() string {
-	label := fmt.Sprintf("label.%d", c.labelCount)
+	label := fmt.Sprintf("label%d", c.labelCount)
 	c.labelCount++
 	return label
 }

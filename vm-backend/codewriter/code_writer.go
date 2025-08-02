@@ -91,35 +91,35 @@ func (c *CodeWriter) WritePushPop(cmd, segment string, index int) {
 func (c *CodeWriter) writePop(segment string, index int) {
 	switch segment {
 	case "local":
-		c.writePopTo("@LCL", index)
+		c.writePopToBaseIndex("@LCL", index)
 	case "argument":
-		c.writePopTo("@ARG", index)
+		c.writePopToBaseIndex("@ARG", index)
 	case "this":
-		c.writePopTo("@THIS", index)
+		c.writePopToBaseIndex("@THIS", index)
 	case "that":
-		c.writePopTo("@THAT", index)
+		c.writePopToBaseIndex("@THAT", index)
 	case "temp":
-		c.writeLines(
-			"@SP",
-			"AM=M-1",
-			"D=M", // value on top of stack in D
-			fmt.Sprintf("@R%v", 5+index),
-			"M=D",
-		)
+		c.writePopToDirect(fmt.Sprintf("@R%v", 5+index))
 	case "pointer":
-		c.writeLines(
-			"@SP",
-			"AM=M-1",
-			"D=M", // value on top of stack in D
-			fmt.Sprintf("@R%v", 3+index),
-			"M=D",
-		)
+		c.writePopToDirect(fmt.Sprintf("@R%v", 3+index))
+	case "static":
+		c.writePopToDirect(fmt.Sprintf("@%v.%v", c.currentFilename, index))
 	default:
 		log.Fatal("pop unimplemented for segment: " + segment)
 	}
 }
 
-func (c *CodeWriter) writePopTo(atSegment string, index int) {
+func (c *CodeWriter) writePopToDirect(atSegment string) {
+	c.writeLines(
+		"@SP",
+		"AM=M-1",
+		"D=M", // value on top of stack in D
+		atSegment,
+		"M=D",
+	)
+}
+
+func (c *CodeWriter) writePopToBaseIndex(atSegment string, index int) {
 	c.writeLines(
 		atSegment,
 		"D=M",
@@ -137,8 +137,6 @@ func (c *CodeWriter) writePopTo(atSegment string, index int) {
 }
 
 func (c *CodeWriter) writePush(segment string, index int) {
-	pushFromDToStack := []string{"@SP", "A=M", "M=D", "@SP", "M=M+1"}
-
 	switch segment {
 	case "constant":
 		c.writeLines(fmt.Sprintf("@%v", index), "D=A")
@@ -161,10 +159,16 @@ func (c *CodeWriter) writePush(segment string, index int) {
 			fmt.Sprintf("@R%v", 3+index),
 			"D=M",
 		)
+	case "static":
+		c.writeLines(
+			fmt.Sprintf("@%v.%v", c.currentFilename, index),
+			"D=M",
+		)
 	default:
 		log.Fatal("push unimplemented for segment: " + segment)
 	}
 
+	pushFromDToStack := []string{"@SP", "A=M", "M=D", "@SP", "M=M+1"}
 	c.writeLines(pushFromDToStack...)
 }
 

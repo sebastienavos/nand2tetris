@@ -19,7 +19,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	cw := codewriter.NewCodeWriter(out)
+	defer cw.Close()
 
 	for _, f := range vmFiles {
 		cw.SetFilename(f)

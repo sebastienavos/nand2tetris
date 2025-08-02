@@ -51,12 +51,10 @@ func (c *CodeWriter) writeComp(comparisonJump string) {
 	c.writeLines(
 		// do x-y
 		"@SP",
-		"M=M-1",
-		"A=M",
+		"AM=M-1",
 		"D=M",
 		"@SP",
-		"M=M-1",
-		"A=M",
+		"AM=M-1",
 		"D=M-D",
 		// define a block to jump to iff comparison is true and effect jump
 		fmt.Sprintf("@%v", trueLabel),

@@ -9,13 +9,13 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatalf("Usage: %s <input.vm | input_directory>", os.Args[0])
+	if len(os.Args) != 3 {
+		log.Fatal("Usage: go run main.go <input.vm | input_directory> <outfile>")
 	}
 
 	vmFiles := statFiles(os.Args[1])
 
-	out, err := os.Create("Prog.asm")
+	out, err := os.Create(os.Args[2])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func main() {
 			case parser.C_POP:
 				cw.WritePushPop("pop", p.Arg1(), p.Arg2())
 			case parser.C_PUSH:
-				cw.WritePushPop("pop", p.Arg1(), p.Arg2())
+				cw.WritePushPop("push", p.Arg1(), p.Arg2())
 			default:
 				panic("crikey")
 			}

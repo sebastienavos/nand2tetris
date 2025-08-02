@@ -45,7 +45,7 @@ type parser struct {
 func NewParserFromFilename(fileName string) *parser {
 	file, err := os.Open(fileName)
 	if err != nil {
-		panic("could not open file")
+		panic("could not open file" + fileName)
 	}
 
 	return NewParser(file)
@@ -87,7 +87,7 @@ func (p *parser) CommandType() CommandType {
 		return C_POP
 	}
 
-	panic("")
+	panic("unexpected command type seen " + p.currentCommand)
 }
 
 // Returns the first argument of the current command.
@@ -119,7 +119,7 @@ func (p *parser) Arg2() int {
 // If a command is not found, p.hasMore is set to false.
 func (p *parser) tryFindNextCommand() {
 	for p.hasMore = p.scanner.Scan(); p.hasMore; p.hasMore = p.scanner.Scan() {
-		stripped := removeWhitespace(stripComment(p.scanner.Text()))
+		stripped := stripComment(p.scanner.Text())
 
 		if stripped != "" {
 			p.nextCommand = stripped
@@ -133,8 +133,4 @@ func stripComment(s string) string {
 		return s[:idx]
 	}
 	return s
-}
-
-func removeWhitespace(s string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(s, " ", ""), "\t", "")
 }

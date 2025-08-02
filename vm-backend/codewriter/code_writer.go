@@ -16,11 +16,11 @@ func NewCodeWriter(w io.WriteCloser) CodeWriter {
 	return CodeWriter{w: w}
 }
 
-func (c CodeWriter) SetFilename(filename string) {
+func (c *CodeWriter) SetFilename(filename string) {
 	c.currentFilename = filename
 }
 
-func (c CodeWriter) WriteArithmetic(cmd string) {
+func (c *CodeWriter) WriteArithmetic(cmd string) {
 	switch cmd {
 	case "add":
 		c.writeBinaryOperator("D=D+M")
@@ -45,20 +45,38 @@ func (c CodeWriter) WriteArithmetic(cmd string) {
 	}
 }
 
-func (c CodeWriter) writeComp(cmd string) {
-	// do x-y
-	c.writeLines("@SP", "M=M-1", "A=M", "D=M", "@SP", "M=M-1", "A=M", "D=M-D")
-	// define a block to jump to iff comparison is true and effect jump
-	t := c.uniqueLabel("true")
-	c.writeLines(fmt.Sprintf("@%v", t), cmd)
-	// if false, we continue to push 0, but must skip the true block so define another label for the continuation
-	cont := c.uniqueLabel("continue")
-	c.writeLines("@SP", "A=M", "M=0", fmt.Sprintf("@%v", cont), "0;JMP") // push zero to x then skip pushing -1
-	// implement true block
-	c.writeLines(fmt.Sprintf("(%v)", t))
-	c.writeLines("@SP", "A=M", "M=-1")
-	// increment SP if true or false
-	c.writeLines("@SP", "M=M+1")
+func (c *CodeWriter) writeComp(comparisonJump string) {
+	trueLabel := c.uniqueLabel()
+	contLabel := c.uniqueLabel()
+	c.writeLines(
+		// do x-y
+		"@SP",
+		"M=M-1",
+		"A=M",
+		"D=M",
+		"@SP",
+		"M=M-1",
+		"A=M",
+		"D=M-D",
+		// define a block to jump to iff comparison is true and effect jump
+		fmt.Sprintf("@%v", trueLabel),
+		comparisonJump,
+		// if false, we continue to push 0, but must skip the true block so jump to the continuation
+		"@SP",
+		"A=M",
+		"M=0",
+		fmt.Sprintf("@%v", contLabel),
+		"0;JMP",
+		// implement true block
+		fmt.Sprintf("(%v)", trueLabel),
+		"@SP",
+		"A=M",
+		"M=-1",
+		//end of true block
+		fmt.Sprintf("(%v)", contLabel),
+		"@SP",
+		"M=M+1",
+	)
 }
 
 func (c CodeWriter) WritePushPop(cmd, segment string, index int) {
@@ -69,10 +87,10 @@ func (c CodeWriter) WritePushPop(cmd, segment string, index int) {
 		log.Fatal("segment not constant")
 	}
 
-	c.writeLines("@index", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1")
+	c.writeLines(fmt.Sprintf("@%v", index), "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1")
 }
 
-func (c CodeWriter) Close() { c.w.Close() }
+func (c *CodeWriter) Close() { c.w.Close() }
 
 // operate on some memory location M and reassign to M
 func (c *CodeWriter) writeUnaryOperator(cmd string) {
@@ -90,8 +108,8 @@ func (c *CodeWriter) writeLines(lines ...string) {
 	}
 }
 
-func (c *CodeWriter) uniqueLabel(base string) string {
-	label := fmt.Sprintf("%s.%d", base, c.labelCount)
+func (c *CodeWriter) uniqueLabel() string {
+	label := fmt.Sprintf("label.%d", c.labelCount)
 	c.labelCount++
 	return label
 }

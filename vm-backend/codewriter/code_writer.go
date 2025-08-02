@@ -92,21 +92,18 @@ func (c *CodeWriter) writePush(segment string, index int) {
 	switch segment {
 	case "constant":
 		c.writeLines(fmt.Sprintf("@%v", index), "D=A")
-		c.writeLines(pushFromDToStack...)
 	case "local":
 		// Set D to the value of the memory at location M(LCL)+index
 		c.loadToD("@LCL", index)
-		c.writeLines(pushFromDToStack...)
 	case "arg":
 		c.loadToD("@ARG", index)
-		c.writeLines(pushFromDToStack...)
 	case "this":
 		c.loadToD("@THIS", index)
-		c.writeLines(pushFromDToStack...)
 	case "that":
 		c.loadToD("@THAT", index)
-		c.writeLines(pushFromDToStack...)
 	}
+
+	c.writeLines(pushFromDToStack...)
 }
 
 func (c *CodeWriter) loadToD(atSegment string, index int) {

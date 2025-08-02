@@ -80,10 +80,54 @@ func (c *CodeWriter) writeComp(comparisonJump string) {
 }
 
 func (c *CodeWriter) WritePushPop(cmd, segment string, index int) {
-	if cmd == "push" {
+	switch cmd {
+	case "push":
 		c.writePush(segment, index)
+	case "pop":
+		c.writePop(segment, index)
+	default:
+		log.Fatal("command not push or pop")
 	}
-	panic("not push")
+}
+
+func (c *CodeWriter) writePop(segment string, index int) {
+	switch segment {
+	case "local":
+		c.writePopTo("@LCL", index)
+	case "argument":
+		c.writePopTo("@ARG", index)
+	case "this":
+		c.writePopTo("@THIS", index)
+	case "that":
+		c.writePopTo("@THAT", index)
+	case "temp":
+		c.writeLines(
+			"@SP",
+			"AM=M-1",
+			"D=M", // value on top of stack in D
+			fmt.Sprintf("@R%v", 5+index),
+			"M=D",
+		)
+	default:
+		log.Fatal("pop unimplemented for segment: " + segment)
+	}
+}
+
+func (c *CodeWriter) writePopTo(atSegment string, index int) {
+	c.writeLines(
+		atSegment,
+		"D=M",
+		fmt.Sprintf("@%v", index),
+		"D=D+A",
+		"@R13",
+		"M=D", // location in R13
+		"@SP",
+		"AM=M-1",
+		"D=M", // value on top of stack in D
+		"@R13",
+		"A=M",
+		"M=D", // save to lcl
+	)
 }
 
 func (c *CodeWriter) writePush(segment string, index int) {
@@ -95,12 +139,19 @@ func (c *CodeWriter) writePush(segment string, index int) {
 	case "local":
 		// Set D to the value of the memory at location M(LCL)+index
 		c.loadToD("@LCL", index)
-	case "arg":
+	case "argument":
 		c.loadToD("@ARG", index)
 	case "this":
 		c.loadToD("@THIS", index)
 	case "that":
 		c.loadToD("@THAT", index)
+	case "temp":
+		c.writeLines(
+			fmt.Sprintf("@R%v", 5+index),
+			"D=M",
+		)
+	default:
+		log.Fatal("push unimplemented for segment: " + segment)
 	}
 
 	c.writeLines(pushFromDToStack...)

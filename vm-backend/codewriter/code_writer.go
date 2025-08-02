@@ -79,15 +79,44 @@ func (c *CodeWriter) writeComp(comparisonJump string) {
 	)
 }
 
-func (c CodeWriter) WritePushPop(cmd, segment string, index int) {
-	if cmd != "push" {
-		log.Fatal("cmd not push")
+func (c *CodeWriter) WritePushPop(cmd, segment string, index int) {
+	if cmd == "push" {
+		c.writePush(segment, index)
 	}
-	if segment != "constant" {
-		log.Fatal("segment not constant")
-	}
+	panic("not push")
+}
 
-	c.writeLines(fmt.Sprintf("@%v", index), "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1")
+func (c *CodeWriter) writePush(segment string, index int) {
+	pushFromDToStack := []string{"@SP", "A=M", "M=D", "@SP", "M=M+1"}
+
+	switch segment {
+	case "constant":
+		c.writeLines(fmt.Sprintf("@%v", index), "D=A")
+		c.writeLines(pushFromDToStack...)
+	case "local":
+		// Set D to the value of the memory at location M(LCL)+index
+		c.loadToD("@LCL", index)
+		c.writeLines(pushFromDToStack...)
+	case "arg":
+		c.loadToD("@ARG", index)
+		c.writeLines(pushFromDToStack...)
+	case "this":
+		c.loadToD("@THIS", index)
+		c.writeLines(pushFromDToStack...)
+	case "that":
+		c.loadToD("@THAT", index)
+		c.writeLines(pushFromDToStack...)
+	}
+}
+
+func (c *CodeWriter) loadToD(atSegment string, index int) {
+	c.writeLines(
+		atSegment,
+		"D=M",
+		fmt.Sprintf("@%v", index),
+		"A=D+A",
+		"D=M",
+	)
 }
 
 func (c *CodeWriter) Close() { c.w.Close() }

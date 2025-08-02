@@ -106,6 +106,14 @@ func (c *CodeWriter) writePop(segment string, index int) {
 			fmt.Sprintf("@R%v", 5+index),
 			"M=D",
 		)
+	case "pointer":
+		c.writeLines(
+			"@SP",
+			"AM=M-1",
+			"D=M", // value on top of stack in D
+			fmt.Sprintf("@R%v", 3+index),
+			"M=D",
+		)
 	default:
 		log.Fatal("pop unimplemented for segment: " + segment)
 	}
@@ -146,6 +154,11 @@ func (c *CodeWriter) writePush(segment string, index int) {
 	case "temp":
 		c.writeLines(
 			fmt.Sprintf("@R%v", 5+index),
+			"D=M",
+		)
+	case "pointer":
+		c.writeLines(
+			fmt.Sprintf("@R%v", 3+index),
 			"D=M",
 		)
 	default:

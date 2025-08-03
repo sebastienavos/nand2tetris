@@ -129,8 +129,6 @@ func (p *parser) tryFindNextCommand() {
 }
 
 func stripComment(s string) string {
-	if idx := strings.Index(s, "//"); idx != -1 {
-		return s[:idx]
-	}
-	return s
+	noComment, _, _ := strings.Cut(s, "//")
+	return noComment
 }

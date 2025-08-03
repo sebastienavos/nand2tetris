@@ -22,16 +22,24 @@ const (
 	C_CALL       CommandType = "C_CALL"
 )
 
-var arithmeticCmds = map[string]struct{}{
-	"add": {},
-	"sub": {},
-	"neg": {},
-	"eq":  {},
-	"gt":  {},
-	"lt":  {},
-	"and": {},
-	"or":  {},
-	"not": {},
+var cmdMapping = map[string]CommandType{
+	"add":      C_ARITHMETIC,
+	"sub":      C_ARITHMETIC,
+	"neg":      C_ARITHMETIC,
+	"eq":       C_ARITHMETIC,
+	"gt":       C_ARITHMETIC,
+	"lt":       C_ARITHMETIC,
+	"and":      C_ARITHMETIC,
+	"or":       C_ARITHMETIC,
+	"not":      C_ARITHMETIC,
+	"push":     C_PUSH,
+	"pop":      C_POP,
+	"label":    C_LABEL,
+	"goto":     C_GOTO,
+	"if":       C_IF,
+	"function": C_FUNCTION,
+	"return":   C_RETURN,
+	"call":     C_CALL,
 }
 
 type parser struct {
@@ -75,19 +83,7 @@ func (p *parser) Advance() {
 
 func (p *parser) CommandType() CommandType {
 	x := strings.Split(p.currentCommand, " ")
-	if _, ok := arithmeticCmds[x[0]]; ok {
-		return C_ARITHMETIC
-	}
-
-	if x[0] == "push" {
-		return C_PUSH
-	}
-
-	if x[0] == "pop" {
-		return C_POP
-	}
-
-	panic("unexpected command type seen " + p.currentCommand)
+	return cmdMapping[x[0]]
 }
 
 // Returns the first argument of the current command.

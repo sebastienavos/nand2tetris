@@ -36,6 +36,12 @@ func main() {
 				cw.WritePushPop("pop", p.Arg1(), p.Arg2())
 			case parser.C_PUSH:
 				cw.WritePushPop("push", p.Arg1(), p.Arg2())
+			case parser.C_LABEL:
+				cw.WriteLabel(p.Arg1())
+			case parser.C_GOTO:
+				cw.WriteGoto(p.Arg1())
+			case parser.C_IF:
+				cw.WriteIfGoto(p.Arg1())
 			default:
 				panic("crikey")
 			}

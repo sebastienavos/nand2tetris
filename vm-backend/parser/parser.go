@@ -82,8 +82,12 @@ func (p *parser) Advance() {
 }
 
 func (p *parser) CommandType() CommandType {
-	x := strings.Split(p.currentCommand, " ")
-	return cmdMapping[x[0]]
+	x := strings.Fields(p.currentCommand)
+	cmd, ok := cmdMapping[x[0]]
+	if !ok {
+		panic("command not recognised: " + x[0])
+	}
+	return cmd
 }
 
 // Returns the first argument of the current command.
@@ -91,7 +95,7 @@ func (p *parser) CommandType() CommandType {
 //
 // Should not be called if the current command is C_RETURN.
 func (p *parser) Arg1() string {
-	splits := strings.Split(p.currentCommand, " ")
+	splits := strings.Fields(p.currentCommand)
 	switch p.CommandType() {
 	case C_ARITHMETIC:
 		return splits[0]
@@ -103,7 +107,7 @@ func (p *parser) Arg1() string {
 // Returns the second argument of the current command.
 // Should be called only if the current command is C_PUSH, C_POP, C_FUNCTION, C_CALL.
 func (p *parser) Arg2() int {
-	i, err := strconv.Atoi(strings.Split(p.currentCommand, " ")[2])
+	i, err := strconv.Atoi(strings.Fields(p.currentCommand)[2])
 	if err != nil {
 		panic("oh bugger")
 	}
@@ -116,8 +120,8 @@ func (p *parser) Arg2() int {
 func (p *parser) tryFindNextCommand() {
 	for p.hasMore = p.scanner.Scan(); p.hasMore; p.hasMore = p.scanner.Scan() {
 		stripped := stripComment(p.scanner.Text())
-
-		if stripped != "" {
+		fields := strings.Fields(stripped)
+		if len(fields) > 0 {
 			p.nextCommand = stripped
 			return
 		}

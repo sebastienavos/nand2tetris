@@ -7,9 +7,14 @@ import (
 )
 
 type CodeWriter struct {
-	w               io.WriteCloser
+	w io.WriteCloser
+
+	// used to scope static variables
 	currentFilename string
-	labelCount      int
+	// used to make external labels, scoped to the function they are defined in, globally unique
+	currentFuncName string
+	// used to ensure internal labels used for comparison (eq,gt,lt) jumps are globally unique
+	compLabelCount int
 }
 
 func NewCodeWriter(w io.WriteCloser) CodeWriter {
@@ -18,6 +23,35 @@ func NewCodeWriter(w io.WriteCloser) CodeWriter {
 
 func (c *CodeWriter) SetFilename(filename string) {
 	c.currentFilename = filename
+}
+
+func (c *CodeWriter) WriteInit() {
+}
+
+// unimplemented for now
+func (c *CodeWriter) WriteCall(funcName string, nArgs int)       {}
+func (c *CodeWriter) WriteReturn()                               {}
+func (c *CodeWriter) WriteFunction(funcName string, nLocals int) {}
+
+func (c *CodeWriter) WriteLabel(l string) {
+	c.writeLines(fmt.Sprintf("(%v$%v)", c.currentFuncName, l))
+}
+func (c *CodeWriter) WriteGoto(l string) {
+	c.writeLines(
+		fmt.Sprintf("@%v$%v", c.currentFuncName, l),
+		"0;JMP",
+	)
+}
+
+// if top of stack is not zero, goto
+func (c *CodeWriter) WriteIfGoto(l string) {
+	c.writeLines(
+		"@SP",
+		"AM=M-1",
+		"D=M",
+		fmt.Sprintf("@%v$%v", c.currentFuncName, l),
+		"D;JNE",
+	)
 }
 
 func (c *CodeWriter) WriteArithmetic(cmd string) {
@@ -200,7 +234,7 @@ func (c *CodeWriter) writeLines(lines ...string) {
 }
 
 func (c *CodeWriter) uniqueLabel() string {
-	label := fmt.Sprintf("label%d", c.labelCount)
-	c.labelCount++
+	label := fmt.Sprintf("label%d", c.compLabelCount)
+	c.compLabelCount++
 	return label
 }

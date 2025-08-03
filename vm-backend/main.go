@@ -40,7 +40,7 @@ func main() {
 				cw.WriteLabel(p.Arg1())
 			case parser.C_GOTO:
 				cw.WriteGoto(p.Arg1())
-			case parser.C_IF:
+			case parser.C_IF_GOTO:
 				cw.WriteIfGoto(p.Arg1())
 			default:
 				panic("crikey")

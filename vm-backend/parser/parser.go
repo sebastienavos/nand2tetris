@@ -16,7 +16,7 @@ const (
 	C_POP        CommandType = "C_POP"
 	C_LABEL      CommandType = "C_LABEL"
 	C_GOTO       CommandType = "C_GOTO"
-	C_IF         CommandType = "C_IF"
+	C_IF_GOTO    CommandType = "C_IF"
 	C_FUNCTION   CommandType = "C_FUNCTION"
 	C_RETURN     CommandType = "C_RETURN"
 	C_CALL       CommandType = "C_CALL"
@@ -36,7 +36,7 @@ var cmdMapping = map[string]CommandType{
 	"pop":      C_POP,
 	"label":    C_LABEL,
 	"goto":     C_GOTO,
-	"if":       C_IF,
+	"if-goto":  C_IF_GOTO,
 	"function": C_FUNCTION,
 	"return":   C_RETURN,
 	"call":     C_CALL,

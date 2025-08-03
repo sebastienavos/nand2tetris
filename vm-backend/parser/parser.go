@@ -46,8 +46,8 @@ type parser struct {
 	scanner *bufio.Scanner
 	// hasMore means next is valid
 	hasMore        bool
-	currentCommand string
-	nextCommand    string
+	currentCommand []string
+	nextCommand    []string
 }
 
 func NewParserFromFilename(fileName string) *parser {
@@ -82,10 +82,9 @@ func (p *parser) Advance() {
 }
 
 func (p *parser) CommandType() CommandType {
-	x := strings.Fields(p.currentCommand)
-	cmd, ok := cmdMapping[x[0]]
+	cmd, ok := cmdMapping[p.currentCommand[0]]
 	if !ok {
-		panic("command not recognised: " + x[0])
+		panic("command not recognised: " + p.currentCommand[0])
 	}
 	return cmd
 }
@@ -95,19 +94,18 @@ func (p *parser) CommandType() CommandType {
 //
 // Should not be called if the current command is C_RETURN.
 func (p *parser) Arg1() string {
-	splits := strings.Fields(p.currentCommand)
 	switch p.CommandType() {
 	case C_ARITHMETIC:
-		return splits[0]
+		return p.currentCommand[0]
 	default:
-		return splits[1]
+		return p.currentCommand[1]
 	}
 }
 
 // Returns the second argument of the current command.
 // Should be called only if the current command is C_PUSH, C_POP, C_FUNCTION, C_CALL.
 func (p *parser) Arg2() int {
-	i, err := strconv.Atoi(strings.Fields(p.currentCommand)[2])
+	i, err := strconv.Atoi(p.currentCommand[2])
 	if err != nil {
 		panic("oh bugger")
 	}
@@ -119,10 +117,9 @@ func (p *parser) Arg2() int {
 // If a command is not found, p.hasMore is set to false.
 func (p *parser) tryFindNextCommand() {
 	for p.hasMore = p.scanner.Scan(); p.hasMore; p.hasMore = p.scanner.Scan() {
-		stripped := stripComment(p.scanner.Text())
-		fields := strings.Fields(stripped)
+		fields := strings.Fields(stripComment(p.scanner.Text()))
 		if len(fields) > 0 {
-			p.nextCommand = stripped
+			p.nextCommand = fields
 			return
 		}
 	}

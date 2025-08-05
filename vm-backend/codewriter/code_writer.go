@@ -32,6 +32,7 @@ func (c *CodeWriter) WriteInit() {
 		"@SP",
 		"M=D",
 	)
+	c.SetFilename("Sys.vm")
 	c.WriteCall("Sys.init", 0)
 }
 
@@ -74,7 +75,7 @@ func (c *CodeWriter) WriteCall(funcName string, nArgs int) {
 
 	// goto f and label return
 	c.writeLines(
-		fmt.Sprintf("@%v$%v", c.currentFilename, funcName),
+		fmt.Sprintf("@%v", funcName),
 		"0;JMP",
 		fmt.Sprintf("(%v)", retAddr),
 	)
@@ -152,7 +153,7 @@ func (c *CodeWriter) WriteReturn() {
 func (c *CodeWriter) WriteFunction(funcName string, nLocals int) {
 	c.currentFuncName = funcName
 	c.writeLines(
-		fmt.Sprintf("(%v$%v)", c.currentFilename, c.currentFuncName),
+		fmt.Sprintf("(%v)", c.currentFuncName),
 	)
 	for range nLocals {
 		c.writePush("constant", 0)

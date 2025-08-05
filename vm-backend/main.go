@@ -23,6 +23,8 @@ func main() {
 	cw := codewriter.NewCodeWriter(out)
 	defer cw.Close()
 
+	cw.WriteInit()
+
 	for _, f := range vmFiles {
 		cw.SetFilename(f)
 		p := parser.NewParserFromFilename(f)

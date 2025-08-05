@@ -26,6 +26,13 @@ func (c *CodeWriter) SetFilename(filename string) {
 }
 
 func (c *CodeWriter) WriteInit() {
+	c.writeLines(
+		"@256",
+		"D=A",
+		"@SP",
+		"M=D",
+	)
+	c.WriteCall("Sys.init", 0)
 }
 
 func (c *CodeWriter) WriteCall(funcName string, nArgs int) {

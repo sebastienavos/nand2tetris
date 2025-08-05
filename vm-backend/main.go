@@ -42,8 +42,14 @@ func main() {
 				cw.WriteGoto(p.Arg1())
 			case parser.C_IF_GOTO:
 				cw.WriteIfGoto(p.Arg1())
+			case parser.C_FUNCTION:
+				cw.WriteFunction(p.Arg1(), p.Arg2())
+			case parser.C_CALL:
+				cw.WriteCall(p.Arg1(), p.Arg2())
+			case parser.C_RETURN:
+				cw.WriteReturn()
 			default:
-				panic("crikey")
+				panic("crikey" + p.CommandType())
 			}
 		}
 	}

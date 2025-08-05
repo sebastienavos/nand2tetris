@@ -13,8 +13,8 @@ type CodeWriter struct {
 	currentFilename string
 	// used to make external labels, scoped to the function they are defined in, globally unique
 	currentFuncName string
-	// used to ensure internal labels used for comparison (eq,gt,lt) jumps are globally unique
-	compLabelCount int
+	// used to ensure internal labels are globally unique
+	labelCount int
 }
 
 func NewCodeWriter(w io.WriteCloser) CodeWriter {
@@ -28,10 +28,110 @@ func (c *CodeWriter) SetFilename(filename string) {
 func (c *CodeWriter) WriteInit() {
 }
 
-// unimplemented for now
-func (c *CodeWriter) WriteCall(funcName string, nArgs int)       {}
-func (c *CodeWriter) WriteReturn()                               {}
-func (c *CodeWriter) WriteFunction(funcName string, nLocals int) {}
+func (c *CodeWriter) WriteCall(funcName string, nArgs int) {
+	retAddr := c.uniqueLabel()
+
+	// push return address to stack
+	c.writeLines(
+		fmt.Sprintf("@%v", retAddr),
+		"D=A",
+	)
+	c.pushFromDToStack()
+
+	c.pushLabelMemToStack("LCL")
+	c.pushLabelMemToStack("ARG")
+	c.pushLabelMemToStack("THIS")
+	c.pushLabelMemToStack("THAT")
+
+	// now we have this stuff on the stack above the called func arguments,
+	// so let's set ARG to be SP minus all the above (taking us to the end of the func arg block)
+	// minus the size of the arg block (nArgs)
+	// i.e. set arg to SP-5-nArgs
+	c.writeLines(
+		"@SP",
+		"D=M",
+		fmt.Sprintf("@%v", 5+nArgs),
+		"D=D-A",
+		"@ARG",
+		"M=D",
+	)
+
+	// set LCL = SP
+	// when we goto f, the first thing that will be run is LCL[i]=0
+	c.writeLines(
+		"@SP",
+		"D=M",
+		"@LCL",
+		"M=D",
+	)
+
+	// goto f and label return
+	c.writeLines(
+		fmt.Sprintf("@%v$%v", c.currentFilename, funcName),
+		"0;JMP",
+		fmt.Sprintf("(%v)", retAddr),
+	)
+}
+
+func (c *CodeWriter) pushLabelMemToStack(l string) {
+	c.writeLines(
+		fmt.Sprintf("@%v", l),
+		"D=M",
+	)
+	c.pushFromDToStack()
+}
+
+func (c *CodeWriter) WriteReturn() {
+	c.writeLines(
+		"@LCL", // ret address is 5 before lcl
+		"D=M",
+		"@5",
+		"A=D-A",
+		"D=M",
+		"@R14", // save RET to R14
+		"M=D",
+
+		// pop a value from the stack and save to ARG, which will become the return
+		// value when control is returned to the caller
+		"@SP",
+		"AM=M-1", // strictly this assignment to M isn't necessary as we're about to nuke SP
+		"D=M",
+		"@ARG", // get ARG
+		"A=M",  // get what it points to
+		"M=D",  // set the value of what it points to to the return value
+		"@ARG", // get ARG again
+		"D=M",  // get what it points to
+		"@SP",
+		"M=D+1", // set the caller's stack pointer to one after the return location
+
+		//restore that, this, arg, lcl
+		"@LCL",
+		"D=M",
+		"@THAT",
+		"MD=D-1",
+		"@THIS",
+		"MD=D-1",
+		"@ARG",
+		"MD=D-1",
+		"@LCL",
+		"MD=D-1",
+
+		// goto ret
+		"@R14",
+		"A=M",
+		"0;JMP",
+	)
+}
+
+func (c *CodeWriter) WriteFunction(funcName string, nLocals int) {
+	c.currentFuncName = funcName
+	c.writeLines(
+		fmt.Sprintf("(%v$%v)", c.currentFilename, c.currentFuncName),
+	)
+	for range nLocals {
+		c.writePush("constant", 0)
+	}
+}
 
 func (c *CodeWriter) WriteLabel(l string) {
 	c.writeLines(fmt.Sprintf("(%v$%v)", c.currentFuncName, l))
@@ -201,8 +301,11 @@ func (c *CodeWriter) writePush(segment string, index int) {
 		log.Fatal("push unimplemented for segment: " + segment)
 	}
 
-	pushFromDToStack := []string{"@SP", "A=M", "M=D", "@SP", "M=M+1"}
-	c.writeLines(pushFromDToStack...)
+	c.pushFromDToStack()
+}
+
+func (c *CodeWriter) pushFromDToStack() {
+	c.writeLines("@SP", "A=M", "M=D", "@SP", "M=M+1")
 }
 
 func (c *CodeWriter) loadToD(atSegment string, index int) {
@@ -234,7 +337,7 @@ func (c *CodeWriter) writeLines(lines ...string) {
 }
 
 func (c *CodeWriter) uniqueLabel() string {
-	label := fmt.Sprintf("label%d", c.compLabelCount)
-	c.compLabelCount++
+	label := fmt.Sprintf("label%d", c.labelCount)
+	c.labelCount++
 	return label
 }

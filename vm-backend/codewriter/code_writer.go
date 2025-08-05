@@ -106,15 +106,34 @@ func (c *CodeWriter) WriteReturn() {
 
 		//restore that, this, arg, lcl
 		"@LCL",
-		"D=M",
+		"A=M-1", // that pointer
+		"D=M",   // get the value of that
 		"@THAT",
-		"MD=D-1",
+		"M=D",
+
+		"@LCL", // local **
+		"D=M",  // local *
+		"@2",
+		"A=D-A", // THIS *
+		"D=M",   // THIS val
 		"@THIS",
-		"MD=D-1",
-		"@ARG",
-		"MD=D-1",
+		"M=D",
+
 		"@LCL",
-		"MD=D-1",
+		"D=M",
+		"@3",
+		"A=D-A",
+		"D=M",
+		"@ARG",
+		"M=D",
+
+		"@LCL",
+		"D=M",
+		"@4",
+		"A=D-A",
+		"D=M",
+		"@LCL",
+		"M=D",
 
 		// goto ret
 		"@R14",

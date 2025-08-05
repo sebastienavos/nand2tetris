@@ -78,6 +78,7 @@ func statFiles(in string) []string {
 
 			if filepath.Ext(e.Name()) != ".vm" {
 				log.Printf("skipping file with wrong extension: %v", e.Name())
+				continue
 			}
 
 			vmFiles = append(vmFiles, e.Name())
